@@ -27,17 +27,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import app.wakirox.redux.Store
 import app.wakirox.redux.SubStore
-import app.wakirox.redux.combine
-import app.wakirox.redux.logger
-import app.wakirox.redux.pullback
 import app.wakirox.tinyredux.async_counter.redux.CounterActions
 import app.wakirox.tinyredux.async_counter.redux.CounterState
-import app.wakirox.tinyredux.async_counter.redux.counter
-import app.wakirox.tinyredux.async_counter.redux.counterMiddleware
-import app.wakirox.tinyredux.async_counter.redux.counterReducer
-import app.wakirox.tinyredux.async_counter.redux.counterState
 import app.wakirox.tinyredux.redux.AppActions
 import app.wakirox.tinyredux.redux.AppState
 import app.wakirox.tinyredux.redux.StoreProvider

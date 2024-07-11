@@ -2,12 +2,9 @@ package app.wakirox.redux
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 
 class SubStore<State, Action, LocalState, LocalAction>(
@@ -38,13 +35,14 @@ class SubStore<State, Action, LocalState, LocalAction>(
         )
     }
 
-    fun <Value> bindWithAction(
-        valueSelector: (LocalState) -> Value,
-        action: (Value) -> LocalAction,
-    ): MutableStateFlow<Value> {
-        val flow = MutableStateFlow(valueSelector(state.value))
-        flow.onEach { newValue -> dispatch(action(newValue)) }.launchIn(scope)
-        return flow
+    fun <T> bind(keyPath: (LocalState) -> T, setKeyPath: (State, T) -> State): Binding<T> {
+        return store.bind({ state -> keyPath(toLocalState(state)) }, { oldState, newValue -> setKeyPath(oldState, newValue) })
+    }
+
+    fun <T> bindWithAction(keyPath: (LocalState) -> T, action: (T) -> LocalAction): Binding<T> {
+        return store.reducedBind({ state -> keyPath(toLocalState(state))}){
+            toGlobalAction(action(it))
+        }
     }
 
 }

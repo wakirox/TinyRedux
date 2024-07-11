@@ -2,8 +2,8 @@ package app.wakirox.redux
 
 data class RunArguments<S, A>(
     val getState: () -> S,
-    val dispatch: (A) -> Unit,
-    val next: (A) -> Unit,
+    val dispatch: suspend (A) -> Unit,
+    val next: suspend (A) -> Unit,
     val action: A
 )
 

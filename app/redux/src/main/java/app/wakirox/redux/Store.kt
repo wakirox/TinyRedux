@@ -3,13 +3,8 @@ package app.wakirox.redux
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -60,15 +55,20 @@ class Store<State, Action>(
         }
     }
 
-    private suspend fun applyMiddlewares(action: Action, reduce: (Action) -> Unit) {
+    private suspend fun applyMiddlewares(action: Action, reduce: suspend (Action) -> Unit) {
         val resolveMiddlewares = middlewares.reversed()
             .fold(
                 initial = reduce,
                 operation = { next, middleware ->
                     { action ->
-                        scope.launch {
-                            middleware.execute(RunArguments(::getState, ::dispatch, next, action))
-                        }
+                        middleware.execute(
+                            RunArguments(
+                                getState = ::getState,
+                                dispatch = ::dispatch,
+                                next = next,
+                                action = action
+                            )
+                        )
                     }
                 }
             )
@@ -85,17 +85,43 @@ class Store<State, Action>(
     private fun getState(): State {
         return _state.value
     }
-
-    fun <T> bind(callback: (State) -> T): StateFlow<T> {
-        return _state.map { callback(it) }
-            .stateIn(scope, SharingStarted.Eagerly, callback(_state.value))
+    fun <T> bind(keyPath: (State) -> T, setKeyPath: (State, T) -> State): Binding<T> {
+        val mutableStateFlow = MutableStateFlow(keyPath(_state.value))
+        scope.launch {
+            _state.collect { newState ->
+                mutableStateFlow.value = keyPath(newState)
+            }
+        }
+        return Binding(
+            get = { mutableStateFlow.asStateFlow() },
+            set = { newValue ->
+                CoroutineScope(Dispatchers.Main).launch {
+                    _state.value = setKeyPath(_state.value, newValue)
+                }
+            }
+        )
     }
 
-    fun <T> reducedBind(callback: (State) -> T, action: (T) -> Action): MutableStateFlow<T> {
-        return MutableStateFlow(callback(_state.value)).apply {
-            onEach { newValue -> dispatch(action(newValue)) }.launchIn(
-                scope
-            )
+    fun <T> reducedBind(keyPath: (State) -> T, action: (T) -> Action): Binding<T> {
+        val mutableStateFlow = MutableStateFlow(keyPath(_state.value))
+        scope.launch {
+            _state.collect { newState ->
+                mutableStateFlow.value = keyPath(newState)
+            }
         }
+        return Binding(
+            get = { mutableStateFlow.asStateFlow() },
+            set = { newValue ->
+                CoroutineScope(Dispatchers.Main).launch {
+                    dispatch(action(newValue))
+                }
+            }
+        )
     }
 }
+
+
+class Binding<T>(
+    val get: () -> StateFlow<T>,
+    val set: (T) -> Unit
+)

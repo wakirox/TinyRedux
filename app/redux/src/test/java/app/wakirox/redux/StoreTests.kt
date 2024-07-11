@@ -54,15 +54,18 @@ class StoreTests {
     @Test
     fun `bind should emit the correct value when state changes`() = runTest {
         val store = Store(SomeState(0, "Initial"), reducer)
-        val countFlow = store.bind(SomeState::count)
+        val countFlow = store.bind(SomeState::count) { oldState: SomeState, value: Int ->
+            oldState.copy(count = value)
+        }
 
-        assertEquals(0, countFlow.value)
+        assertEquals(0, countFlow.get().value)
 
         store.dispatch(SomeAction.Increment(1))
 
         advanceUntilIdle()
 
-        assertEquals(1, countFlow.value)
+        assertEquals(1, countFlow.get().value)
+        assertEquals(1, store.state.value.count)
     }
 
     @Test
@@ -70,10 +73,16 @@ class StoreTests {
         val store = Store(SomeState(0, "Initial"), reducer)
         val nameFlow = store.reducedBind(SomeState::message) { SomeAction.UpdateMessage(it) }
 
-        nameFlow.value = "New Name"
+        nameFlow.set("New Name")
 
         advanceUntilIdle()
 
         assertEquals("New Name", store.state.value.message)
+
+        store.dispatch(action = SomeAction.UpdateMessage("Some new message"))
+
+        advanceUntilIdle()
+
+        assertEquals("Some new message", nameFlow.get().value)
     }
 }

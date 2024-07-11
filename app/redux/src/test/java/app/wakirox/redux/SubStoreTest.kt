@@ -5,7 +5,6 @@ import app.wakirox.redux.action.SomeLocalAction
 import app.wakirox.redux.state.SomeState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -95,11 +94,11 @@ class SubStoreTest {
 
         // Test reduced binding
         val reducedBinding = subStore.bindWithAction(
-            valueSelector = { it },
+            keyPath = { it },
             action = SomeLocalAction::Increment
         )
 
-        reducedBinding.update { 10 }
+        reducedBinding.set(10)
 
         advanceUntilIdle()
 
