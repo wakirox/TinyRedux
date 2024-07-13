@@ -1,7 +1,7 @@
 package app.wakirox.redux
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -11,12 +11,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class Store<State, Action>(
+open class Store<State, Action>(
     initialState: State,
     private val reducer: Reducer<State, Action>,
-    private val middlewares: List<AnyMiddleware<State, Action>> = emptyList(),
-    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main),
-) {
+    private val middlewares: List<AnyMiddleware<State, Action>> = emptyList()
+) : ViewModel() {
 
     private val _state = MutableStateFlow(initialState)
     val state = _state.asStateFlow()
@@ -46,7 +45,7 @@ class Store<State, Action>(
     private fun processActionsIfNeeded() {
         if (!isProcessing) {
             isProcessing = true
-            scope.launch { // Use coroutine for asynchronous processing
+            viewModelScope.launch { // Use coroutine for asynchronous processing
                 while (actionQueue.isNotEmpty()) {
                     val action = actionQueue.removeFirst()
                     applyMiddlewares(action) { reducedAction ->
@@ -110,7 +109,7 @@ class Store<State, Action>(
     }
 
     private fun <T> createFlow(valueSelector: (State) -> T) = _state.map { valueSelector(it) }
-        .stateIn(scope, SharingStarted.Eagerly, valueSelector(_state.value))
+        .stateIn(viewModelScope, SharingStarted.Eagerly, valueSelector(_state.value))
 }
 
 

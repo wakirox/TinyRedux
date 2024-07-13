@@ -1,22 +1,22 @@
 package app.wakirox.redux
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
-class SubStore<State, Action, LocalState, LocalAction>(
+open class SubStore<State, Action, LocalState, LocalAction>(
     private val store: Store<State, Action>,
     private val toLocalState: (State) -> LocalState,
-    private val toGlobalAction: (LocalAction) -> Action,
-    scope: CoroutineScope = CoroutineScope(Dispatchers.Main),
-) {
+    private val toGlobalAction: (LocalAction) -> Action
+) : ViewModel() {
 
     val state: StateFlow<LocalState> = store.state.map {
         toLocalState(it)
-    }.stateIn(scope, SharingStarted.Eagerly, toLocalState(store.state.value))
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, toLocalState(store.state.value))
 
     operator fun <Value> get(keyPath: (LocalState) -> Value): Value { // Use a function for type safety
         return keyPath(state.value)

@@ -20,53 +20,46 @@ import app.wakirox.tinyredux.ui.text_input.redux.textState
 import app.wakirox.tinyredux.ui.text_input.redux.withText
 
 class StoreProvider {
-    companion object {
-        val defaultStore: Store<AppState, AppActions> by lazy {
-            Store(
-                initialState = AppState.default(),
-                reducer = logger(
-                    combine(
-                        pullback(
-                            reducer = counterReducer,
-                            toState = AppState::counterState,
-                            toAction = AppActions::counter,
-                            updateGlobalState = AppState::withCounter
-                        ),
-                        pullback(
-                            reducer = textReducer,
-                            toState = AppState::textState,
-                            toAction = AppActions::text,
-                            updateGlobalState = AppState::withText
-                        )
-                    )
+    class DefaultStore : Store<AppState, AppActions>(
+        initialState = AppState.default(),
+        reducer = logger(
+            combine(
+                pullback(
+                    reducer = counterReducer,
+                    toState = AppState::counterState,
+                    toAction = AppActions::counter,
+                    updateGlobalState = AppState::withCounter
                 ),
-                middlewares = listOf(
-                    pullback(
-                        middleware = counterMiddleware,
-                        toState = AppState::counterState,
-                        toAction = AppActions::counter,
-                        toGlobalAction = {
-                            AppActions.Counter(it)
-                        }
-                    )
+                pullback(
+                    reducer = textReducer,
+                    toState = AppState::textState,
+                    toAction = AppActions::text,
+                    updateGlobalState = AppState::withText
                 )
             )
-        }
-
-        val counterStore: SubStore<AppState, AppActions, CounterState, CounterActions> by lazy {
-            SubStore(
-                store = defaultStore,
-                toLocalState = { it.counterState },
-                toGlobalAction = { AppActions.Counter(it) }
+        ),
+        middlewares = listOf(
+            pullback(
+                middleware = counterMiddleware,
+                toState = AppState::counterState,
+                toAction = AppActions::counter,
+                toGlobalAction = {
+                    AppActions.Counter(it)
+                }
             )
-        }
+        )
+    )
 
-        val textStore: SubStore<AppState, AppActions, TextState, TextActions> by lazy {
-            SubStore(
-                store = defaultStore,
-                toLocalState = { it.textState },
-                toGlobalAction = { AppActions.Text(it) }
-            )
-        }
-    }
+    class CounterStore : SubStore<AppState, AppActions, CounterState, CounterActions>(
+        store = DefaultStore(),
+        toLocalState = { it.counterState },
+        toGlobalAction = { AppActions.Counter(it) }
+    )
+
+    class TextStore : SubStore<AppState, AppActions, TextState, TextActions>(
+        store = DefaultStore(),
+        toLocalState = { it.textState },
+        toGlobalAction = { AppActions.Text(it) }
+    )
 }
+

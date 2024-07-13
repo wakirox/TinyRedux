@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -18,10 +19,9 @@ import app.wakirox.tinyredux.ui.theme.TinyReduxTheme
 
 class MainActivity : ComponentActivity() {
 
-    //Not best practice to use this in production
-    private val defaultStore = StoreProvider.defaultStore
-    private val counterStore = StoreProvider.counterStore
-    private val textStore = StoreProvider.textStore
+    private val defaultStore by viewModels<StoreProvider.DefaultStore>()
+    private val counterStore by viewModels<StoreProvider.CounterStore>()
+    private val textStore by viewModels<StoreProvider.TextStore>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,8 +29,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             TinyReduxTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-
-
                     Column(modifier = Modifier.padding(innerPadding)) {
                         CounterView(
                             store = counterStore,

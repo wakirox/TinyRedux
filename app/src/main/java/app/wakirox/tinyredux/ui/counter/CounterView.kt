@@ -25,11 +25,12 @@ import app.wakirox.tinyredux.ui.counter.redux.CounterActions
 import app.wakirox.tinyredux.ui.counter.redux.CounterState
 import app.wakirox.tinyredux.redux.AppActions
 import app.wakirox.tinyredux.redux.AppState
+import app.wakirox.tinyredux.redux.StoreProvider
 
 @Composable
 fun CounterView(
     modifier: Modifier = Modifier,
-    store: SubStore<AppState, AppActions, CounterState, CounterActions>,
+    store: StoreProvider.CounterStore,
 ) {
     val counterValue by store.state.collectAsState()
     Column(

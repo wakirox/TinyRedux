@@ -12,13 +12,14 @@ import androidx.compose.ui.Modifier
 import app.wakirox.redux.SubStore
 import app.wakirox.tinyredux.redux.AppActions
 import app.wakirox.tinyredux.redux.AppState
+import app.wakirox.tinyredux.redux.StoreProvider
 import app.wakirox.tinyredux.ui.text_input.redux.TextActions
 import app.wakirox.tinyredux.ui.text_input.redux.TextState
 
 @Composable
 fun TextInputViewBind(
     modifier: Modifier = Modifier,
-    store: SubStore<AppState, AppActions, TextState, TextActions>,
+    store: StoreProvider.TextStore,
 ) {
     val binding = store.bind(TextState::text) { appState, value ->
         appState.copy(message = value)
@@ -41,7 +42,7 @@ fun TextInputViewBind(
 @Composable
 fun TextInputViewBindWithAction(
     modifier: Modifier = Modifier,
-    store: SubStore<AppState, AppActions, TextState, TextActions>,
+    store: StoreProvider.TextStore,
 ) {
     val binding = store.bindWithAction(TextState::text, TextActions::UpdateText)
 
