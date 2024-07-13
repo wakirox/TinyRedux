@@ -37,9 +37,15 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.padding(10.dp)
                         )
 
-                        TextInputViewBind(store = textStore, modifier = Modifier.padding(10.dp))
+                        TextInputViewBind(
+                            store = textStore,
+                            modifier = Modifier.padding(10.dp)
+                        )
 
-                        TextInputViewBindWithAction(store = textStore, modifier = Modifier.padding(10.dp))
+                        TextInputViewBindWithAction(
+                            store = textStore,
+                            modifier = Modifier.padding(10.dp)
+                        )
                     }
                 }
             }

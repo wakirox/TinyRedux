@@ -26,16 +26,16 @@ class SubStore<State, Action, LocalState, LocalAction>(
         store.dispatch(actions = actions.map { toGlobalAction(it) })
     }
 
-    fun <T> bind(localStateToValue: (LocalState) -> T, updateGlobalState: (State, T) -> State): Binding<T> {
+    fun <T> bind(valueSelector: (LocalState) -> T, stateUpdater: (State, T) -> State): Binding<T> {
         return store.bind(
-            stateToValue = { state -> localStateToValue(toLocalState(state)) },
-            stateUpdate = { oldState, newValue -> updateGlobalState(oldState, newValue) }
+            valueSelector = { state -> valueSelector(toLocalState(state)) },
+            stateUpdater = stateUpdater
         )
     }
 
-    fun <T> bindWithAction(localStateToValue: (LocalState) -> T, action: (T) -> LocalAction): Binding<T> {
+    fun <T> bindWithAction(valueSelector: (LocalState) -> T, action: (T) -> LocalAction): Binding<T> {
         return store.reducedBind(
-            stateToValue = { state -> localStateToValue(toLocalState(state)) },
+            valueSelector = { state -> valueSelector(toLocalState(state)) },
             action = { toGlobalAction(action(it)) }
         )
     }

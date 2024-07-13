@@ -1,6 +1,7 @@
 package app.wakirox.tinyredux.ui.text_input.redux
 
 import app.wakirox.tinyredux.redux.AppState
+import app.wakirox.tinyredux.ui.counter.redux.CounterState
 
 data class TextState(val text: String)
 

@@ -87,7 +87,7 @@ class SubStoreTest {
 
         // Test binding
         val binding =
-            subStore.bind(localStateToValue = { it }, updateGlobalState = { state, value -> state.copy(count = value) })
+            subStore.bind(valueSelector = { it }, stateUpdater = { state, value -> state.copy(count = value) })
 
         advanceUntilIdle()
 
@@ -95,7 +95,7 @@ class SubStoreTest {
 
         // Test reduced binding
         val reducedBinding = subStore.bindWithAction(
-            localStateToValue = { it },
+            valueSelector = { it },
             action = SomeLocalAction::Increment
         )
 

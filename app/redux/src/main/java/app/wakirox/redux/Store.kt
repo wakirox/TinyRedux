@@ -3,8 +3,11 @@ package app.wakirox.redux
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -85,43 +88,33 @@ class Store<State, Action>(
     private fun getState(): State {
         return _state.value
     }
-    fun <T> bind(stateToValue: (State) -> T, stateUpdate: (State, T) -> State): Binding<T> {
-        val mutableStateFlow = MutableStateFlow(stateToValue(_state.value))
-        scope.launch {
-            _state.collect { newState ->
-                mutableStateFlow.value = stateToValue(newState)
-            }
-        }
+
+    fun <T> bind(valueSelector: (State) -> T, stateUpdater: (State, T) -> State): Binding<T> {
+        val flow = createFlow(valueSelector)
         return Binding(
-            get = { mutableStateFlow.asStateFlow() },
+            get = { flow },
             set = { newValue ->
-                scope.launch {
-                    _state.value = stateUpdate(_state.value, newValue)
-                }
+                _state.update { state -> stateUpdater(state, newValue) }
             }
         )
     }
 
-    fun <T> reducedBind(stateToValue: (State) -> T, action: (T) -> Action): Binding<T> {
-        val mutableStateFlow = MutableStateFlow(stateToValue(_state.value))
-        scope.launch {
-            _state.collect { newState ->
-                mutableStateFlow.value = stateToValue(newState)
-            }
-        }
+    fun <T> reducedBind(valueSelector: (State) -> T, action: (T) -> Action): Binding<T> {
+        val flow = createFlow(valueSelector)
         return Binding(
-            get = { mutableStateFlow.asStateFlow() },
+            get = { flow },
             set = { newValue ->
-                scope.launch {
-                    dispatch(action(newValue))
-                }
+                dispatch(action(newValue))
             }
         )
     }
+
+    private fun <T> createFlow(valueSelector: (State) -> T) = _state.map { valueSelector(it) }
+        .stateIn(scope, SharingStarted.Eagerly, valueSelector(_state.value))
 }
 
 
 class Binding<T>(
     val get: () -> StateFlow<T>,
-    val set: (T) -> Unit
+    val set: (T) -> Unit,
 )
