@@ -12,11 +12,10 @@ fun <LocalState, GlobalState, LocalAction, GlobalAction> pullback(
     toState: (GlobalState) -> LocalState,
     updateGlobalState: (GlobalState, LocalState) -> GlobalState,
     toAction: (GlobalAction) -> LocalAction?
-) where LocalAction : Any, GlobalAction : Any = Reducer<GlobalState, GlobalAction> { globalState, globalAction ->
+) = Reducer<GlobalState, GlobalAction> { globalState, globalAction ->
     val localAction: LocalAction = toAction(globalAction) ?: return@Reducer globalState
     val localState = toState(globalState)
     val reducedState = reducer.reduce(localState, localAction)
-    //not sure
     updateGlobalState(globalState, reducedState)
 }
 
@@ -25,7 +24,7 @@ fun <LocalState, GlobalState, LocalAction, GlobalAction> pullback(
     toState: (GlobalState) -> LocalState,
     toAction: (GlobalAction) -> LocalAction?,
     toGlobalAction: (LocalAction) -> GlobalAction,
-) where LocalAction : Any, GlobalAction : Any = AnyMiddleware { runArguments ->
+) = AnyMiddleware { runArguments ->
     toAction(runArguments.action)?.let { action ->
         middleware.execute(
             RunArguments(

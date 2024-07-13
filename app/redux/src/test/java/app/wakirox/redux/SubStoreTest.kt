@@ -35,7 +35,7 @@ class SubStoreTest {
             is SomeAction.UpdateMessage -> state.copy(message = action.message)
         }
     }
-    private val actionMapper : (SomeLocalAction) -> SomeAction = { action ->
+    private val actionMapper: (SomeLocalAction) -> SomeAction = { action ->
         when (action) {
             is SomeLocalAction.Increment -> SomeAction.Increment(action.value)
             is SomeLocalAction.UpdateMessage -> SomeAction.UpdateMessage(action.message)
@@ -86,15 +86,16 @@ class SubStoreTest {
         advanceUntilIdle()
 
         // Test binding
-        val binding = subStore.bind { it }
+        val binding =
+            subStore.bind(localStateToValue = { it }, updateGlobalState = { state, value -> state.copy(count = value) })
 
         advanceUntilIdle()
 
-        assertEquals(0, binding.value)
+        assertEquals(0, binding.get().value)
 
         // Test reduced binding
         val reducedBinding = subStore.bindWithAction(
-            keyPath = { it },
+            localStateToValue = { it },
             action = SomeLocalAction::Increment
         )
 

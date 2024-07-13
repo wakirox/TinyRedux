@@ -13,7 +13,7 @@ class Store<State, Action>(
     private val reducer: Reducer<State, Action>,
     private val middlewares: List<AnyMiddleware<State, Action>> = emptyList(),
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main),
-) where State : Any {
+) {
 
     private val _state = MutableStateFlow(initialState)
     val state = _state.asStateFlow()
@@ -85,34 +85,34 @@ class Store<State, Action>(
     private fun getState(): State {
         return _state.value
     }
-    fun <T> bind(keyPath: (State) -> T, setKeyPath: (State, T) -> State): Binding<T> {
-        val mutableStateFlow = MutableStateFlow(keyPath(_state.value))
+    fun <T> bind(stateToValue: (State) -> T, stateUpdate: (State, T) -> State): Binding<T> {
+        val mutableStateFlow = MutableStateFlow(stateToValue(_state.value))
         scope.launch {
             _state.collect { newState ->
-                mutableStateFlow.value = keyPath(newState)
+                mutableStateFlow.value = stateToValue(newState)
             }
         }
         return Binding(
             get = { mutableStateFlow.asStateFlow() },
             set = { newValue ->
-                CoroutineScope(Dispatchers.Main).launch {
-                    _state.value = setKeyPath(_state.value, newValue)
+                scope.launch {
+                    _state.value = stateUpdate(_state.value, newValue)
                 }
             }
         )
     }
 
-    fun <T> reducedBind(keyPath: (State) -> T, action: (T) -> Action): Binding<T> {
-        val mutableStateFlow = MutableStateFlow(keyPath(_state.value))
+    fun <T> reducedBind(stateToValue: (State) -> T, action: (T) -> Action): Binding<T> {
+        val mutableStateFlow = MutableStateFlow(stateToValue(_state.value))
         scope.launch {
             _state.collect { newState ->
-                mutableStateFlow.value = keyPath(newState)
+                mutableStateFlow.value = stateToValue(newState)
             }
         }
         return Binding(
             get = { mutableStateFlow.asStateFlow() },
             set = { newValue ->
-                CoroutineScope(Dispatchers.Main).launch {
+                scope.launch {
                     dispatch(action(newValue))
                 }
             }

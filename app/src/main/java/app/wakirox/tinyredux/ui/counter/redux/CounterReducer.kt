@@ -1,4 +1,4 @@
-package app.wakirox.tinyredux.async_counter.redux
+package app.wakirox.tinyredux.ui.counter.redux
 
 import app.wakirox.redux.Reducer
 

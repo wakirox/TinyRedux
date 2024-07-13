@@ -11,8 +11,8 @@ class SubStore<State, Action, LocalState, LocalAction>(
     private val store: Store<State, Action>,
     private val toLocalState: (State) -> LocalState,
     private val toGlobalAction: (LocalAction) -> Action,
-    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main)
-) where Action : Any?, LocalAction : Any?, State : Any {
+    scope: CoroutineScope = CoroutineScope(Dispatchers.Main),
+) {
 
     val state: StateFlow<LocalState> = store.state.map {
         toLocalState(it)
@@ -26,23 +26,18 @@ class SubStore<State, Action, LocalState, LocalAction>(
         store.dispatch(actions = actions.map { toGlobalAction(it) })
     }
 
-    fun <Value> bind(
-        valueSelector: (LocalState) -> Value,
-    ): StateFlow<Value> {
-        return state
-            .map(valueSelector)
-            .stateIn(scope, SharingStarted.Eagerly, valueSelector(state.value)
+    fun <T> bind(localStateToValue: (LocalState) -> T, updateGlobalState: (State, T) -> State): Binding<T> {
+        return store.bind(
+            stateToValue = { state -> localStateToValue(toLocalState(state)) },
+            stateUpdate = { oldState, newValue -> updateGlobalState(oldState, newValue) }
         )
     }
 
-    fun <T> bind(keyPath: (LocalState) -> T, setKeyPath: (State, T) -> State): Binding<T> {
-        return store.bind({ state -> keyPath(toLocalState(state)) }, { oldState, newValue -> setKeyPath(oldState, newValue) })
-    }
-
-    fun <T> bindWithAction(keyPath: (LocalState) -> T, action: (T) -> LocalAction): Binding<T> {
-        return store.reducedBind({ state -> keyPath(toLocalState(state))}){
-            toGlobalAction(action(it))
-        }
+    fun <T> bindWithAction(localStateToValue: (LocalState) -> T, action: (T) -> LocalAction): Binding<T> {
+        return store.reducedBind(
+            stateToValue = { state -> localStateToValue(toLocalState(state)) },
+            action = { toGlobalAction(action(it)) }
+        )
     }
 
 }

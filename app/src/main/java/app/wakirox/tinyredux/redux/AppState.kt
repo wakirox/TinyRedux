@@ -14,7 +14,7 @@ data class AppState(
     companion object {
         fun default() = AppState(
             header = "Lorem ipsum",
-            message = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam eu fringilla libero, sed euismod ipsum.",
+            message = "",
             counter = 0,
             counterMessage = "",
             timeCount = 0,
